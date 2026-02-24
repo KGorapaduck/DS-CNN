@@ -1,0 +1,43 @@
+# Dataset (Large files)
+speech_dataset/
+*.tar.gz
+*.zip
+
+# Checkpoints and Training Logs
+work/ds_cnn_train/
+# Keep frozen graph and tflite models
+!work/*.pb
+!work/*.tflite
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# IDEs
+.idea/
+.vscode/
+
+# OS specific
+.DS_Store
+Thumbs.db
