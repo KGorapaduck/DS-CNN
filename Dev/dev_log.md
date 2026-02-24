@@ -254,3 +254,18 @@ no                0         4         5   243
   </details>
 - **결론:** 파라미터 조정을 통해 PC 환경에서 Float32 비양자화 모델의 실시간 마이크 KWS 추론 안정성을 성공적으로 확보함. 이를 기반으로 라즈베리파이(Phase 2) 이식 준비를 완료함.
 
+---
+
+### 실패 12: MFCC 전처리 모델 TFLite 분할 변환 에러
+- **증상:** 라즈베리파이 경량화를 위해 TensorFlow 1.15의 MFCC 전처리 부분(`contrib_audio.mfcc`, `audio_spectrogram`)만 따로 떼어 `mfcc_engine.tflite`로 변환하려 했으나 에러 발생.
+  ```text
+  Exception: Some of the operators in the model are not supported by the standard TensorFlow Lite runtime. If those are custom operators, please...
+  ```
+- **원인:** 표준 TFLite 런타임에는 오디오 처리에 특화된 `AudioSpectrogram`, `Mfcc` 오퍼레이션이 내장되어 있지 않아 TFLite 포맷 안에 해당 계산식을 담을 수 없음(Custom Op 필요).
+- **해결방안:** TFLite 변환 방식 대신, 파이썬 기반 범용 MFCC 추출 라이브러리로 대체 가능성을 검토.
+
+### 실패 13: 파이썬 MFCC 대체 라이브러리 정확도(분포) 불일치
+- **증상:** TensorFlow의 내장 MFCC 대신 가벼운 `python_speech_features` 범용 패키지를 사용하여 동일 파라미터(16000Hz, window=40ms, stride=20ms)로 특징을 추출해 보았으나, 최종 MFCC 결과값 스케일과 분포 범위가 완전히 달랐음. (Mean Abs Error: 6.35, Max Abs Error: 29.5)
+- **원인:** 텐서플로우 내부의 MFCC C++ 구현체(`contrib_audio.mfcc`)는 내부적으로 쓰이는 멜 필터뱅크 개수나 정규화 로직이 파이썬 표준 범용 패키지와 완전히 다르게 독자적으로 구현되어 있음.
+- **해결방안:** 모델 입력값이 달라지면 KWS 인식률이 0%로 수렴함. 따라서 **라즈베리파이 환경에서도 완벽히 똑같은 텐서플로우 1.15를 구동**시켜야만 함을 결론 내림. 라즈베리파이 OS를 구버전(Buster)으로 설치하여 ARM용 TF 1.15를 직접 설치하는 방향(`pi_setup_guide.md`)으로 선회함.
+
