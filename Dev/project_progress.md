@@ -13,8 +13,8 @@
 - [x] Conda `kws` 환경 구축 (Python 3.7 + TF 1.15)
 - [x] DS-CNN 모델 학습 (yes/no, Float32) — Test Accuracy 96.72%
 - [x] `freeze.py`로 체크포인트 → Frozen Graph (`.pb`) 변환
-- [ ] Frozen Graph → TFLite (`.tflite`) 변환
-- [ ] TFLite 모델 추론 테스트 (PC에서)
+- [x] Frozen Graph → TFLite (`.tflite`) 변환
+- [x] TFLite 모델 추론 테스트 (PC에서)
 
 ### 라즈베리파이 배포
 - [ ] 라즈베리파이 OS 세팅 (Lite 버전 권장)

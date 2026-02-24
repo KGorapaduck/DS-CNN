@@ -6,6 +6,11 @@ import tensorflow as tf
 import sys
 import os
 
+# toco_from_protos 명령어를 찾을 수 있도록 PATH에 Scripts 폴더 강제 추가
+toco_path = r'C:\ProgramData\anaconda3\envs\kws\Scripts'
+if toco_path not in os.environ['PATH']:
+    os.environ['PATH'] = f"{toco_path};" + os.environ['PATH']
+
 sys.path.insert(0, '.')
 import input_data
 import models
