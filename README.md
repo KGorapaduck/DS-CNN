@@ -1,3 +1,4 @@
+
 # KWS-DS-CNN-for-embedded
 
 본 리포지토리는 **키워드 스포팅(Keyword Spotting)**을 위한 **깊이별 분리 합성곱 신경망(Depthwise Separable Convolutional Neural Networks, DS-CNN)** 기반 TensorFlow 모델 학습용 수정된 Python 스크립트를 포함하고 있습니다. 해당 스크립트는 TensorFlow의 Speech Commands 예제를 기반으로 작성되었습니다.
