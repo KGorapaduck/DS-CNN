@@ -6,32 +6,35 @@ PC에서 성공적으로 검증된 KWS(Keyword Spotting) 파이프라인을 라�
 
 ---
 
-## 1단계: 라즈베리파이 OS 설치 및 초기 설정
-TensorFlow 1.15 사전 빌드 버전과 호환되는 **Python 3.7** 환경을 맞추기 위해, 반드시 **Legacy (Buster)** 버전을 설치해야 합니다.
-
-1. PC에서 **Raspberry Pi Imager** 프로세스를 실행합니다.
-2. **[운영체제 선택]** -> **[Raspberry Pi OS (Other)]** 클릭
-3. **[Raspberry Pi OS (Legacy, 32-bit)]** (Debian Buster 기반)을 선택합니다.
-4. 설치 전 톱니바퀴(설정) 버튼을 눌러 아래 사항을 미리 설정합니다:
-   - **호스트 이름:** `kws-pi` (원하는 이름)
-   - **SSH 활성화:** 비밀번호 사용 (체크)
-   - **사용자 이름 및 비밀번호:** `pi` / `raspberry` (원하는 계정)
-   - **무선 LAN(Wi-Fi) 설정:** 사용할 공유기 이름(SSID)과 비밀번호 입력
-5. SD 카드를 라즈베리파이 3 B+에 넣고 부팅합니다. (약 1~2분 소요)
+이 가이드는 사용자의 최신 OS(Debian 13 Trixie, aarch64, Python 3.13)를 **재설치하지 않고 그대로 유지**하면서, TensorFlow 1.15 구동에 필요한 Python 3.7 환경을 **Docker 컨테이너**로 안전하게 띄워서 실행하는 방법을 설명합니다.
 
 ---
 
-## 2단계: 필수 라이브러리 및 하드웨어 세팅
+## 1단계: 라즈베리파이에 Docker 설치 (호스트 터미널 작업)
 
-VNC나 SSH(Putty 등)를 통해 라즈베리파이에 접속한 후, 터미널(Terminal)을 열고 순서대로 복사+붙여넣기 합니다.
+현재 사용 중인 최신 라즈베리파이 OS에 컨테이너 환경을 구동하기 위한 Docker 엔진을 설치합니다. 라즈베리파이 터미널에서 다음을 실행하세요.
 
-### 1. 시스템 업데이트 및 필수 의존성 설치
 ```bash
+# 최신 패키지 업데이트
 sudo apt-get update
-sudo apt-get install -y python3-pip python3-dev
-sudo apt-get install -y libatlas-base-dev  # Numpy 가속용
-sudo apt-get install -y portaudio19-dev    # 마이크 제어(PyAudio)용
+sudo apt-get upgrade -y
+
+# Docker 간편 설치 스크립트 실행
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+
+# 현재 사용자(kouy956 등)를 docker 그룹에 추가하여 sudo 없이 실행 (설정 후 SSH 재접속 권장)
+sudo usermod -aG docker $USER
 ```
+
+---
+
+## 2단계: 호스트에 마이크 하드웨어 확인
+라즈베리파이에 USB 마이크(또는 오디오 햇)를 꽂은 뒤, 리눅스 커널에 제대로 인식되었는지 확인합니다.
+```bash
+arecord -l
+```
+> 목록에 USB 오디오 디바이스가 보이면 정상입니다. (카드 번호를 꼭 확인해 주세요. 나중에 Docker로 스피커/마이크 장치 `/dev/snd` 를 통째로 넘겨줄 예정입니다.)
 
 ### 2. 마이크 연결 확인
 USB 마이크(또는 오디오 햇)를 꽂은 뒤, 인식되었는지 확인합니다.
@@ -42,41 +45,68 @@ arecord -l
 
 ---
 
-## 3단계: 임베디드용 TensorFlow 및 패키지 설치
+## 3단계: Dockerfile 작성 및 빌드 (라즈베리파이 내부 작업)
 
-Python 3.7(Buster 기본)에 맞춰 커뮤니티에서 빌드해둔 ARM v7(라즈베리파이 3용) TensorFlow 1.15 버전을 설치합니다.
+라즈베리파이 안에 프로젝트 폴더를 만들고, 내장될 파이썬 3.7 컨테이너 명세서(`Dockerfile`)를 작성합니다.
 
 ```bash
-# pip 최신화
-python3 -m pip install --upgrade pip
+mkdir -p ~/KWS_Project && cd ~/KWS_Project
+nano Dockerfile
+```
 
-# ARM용 TensorFlow 1.15 미리 빌드된 Wheel 파일 다운로드 및 설치
-wget https://github.com/lhelontra/tensorflow-on-arm/releases/download/v1.15.0/tensorflow-1.15.0-cp37-none-linux_armv7l.whl
-pip3 install tensorflow-1.15.0-cp37-none-linux_armv7l.whl
+아래 내용을 복사하여 `Dockerfile`에 붙여넣고 저장(`Ctrl+O`, `Enter`, `Ctrl+X`)합니다.
 
-# 마이크 스트리밍을 위한 pyaudio 설치
-pip3 install pyaudio
+```dockerfile
+# ARM64 기반 레거시 Debian(Python 3.7 호환) 이미지 사용
+FROM arm64v8/debian:buster-slim
+
+# 마이크/오디오 의존성 패키지 설치
+RUN apt-get update && apt-get install -y \
+    python3 python3-pip python3-dev \
+    wget libatlas-base-dev portaudio19-dev \
+    alsa-utils gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# 파이썬 pip 최신화
+RUN python3 -m pip install --upgrade pip
+
+# ARM64용 TensorFlow 1.15 Wheel 설치 (aarch64 전용 사전 빌드 파일)
+RUN wget https://github.com/lhelontra/tensorflow-on-arm/releases/download/v1.15.2/tensorflow-1.15.2-cp37-none-linux_aarch64.whl
+RUN pip3 install tensorflow-1.15.2-cp37-none-linux_aarch64.whl pyaudio
+
+WORKDIR /app
+CMD ["python3", "pc_mic_test.py"]
+```
+
+작성 후, 해당 디렉토리에서 Docker 이미지를 빌드합니다. (종속성 다운로드로 인해 시간이 좀 걸립니다.)
+```bash
+docker build -t kws-tf1.15 .
 ```
 
 ---
 
-## 4단계: 파일 전송 및 실행
+## 4단계: 파일 전송 및 Docker 컨테이너 실행
 
-PC에서 완성된 KWS 파일들을 라즈베리파이로 전송합니다. 전송 수단으로는 FileZilla, WinSCP, 또는 `scp` 명령어를 사용합니다.
+PC에서 완성된 KWS 파일들을 라즈베리파이의 `~/KWS_Project` 폴더로 전송합니다. 전송 수단으로는 FileZilla, WinSCP, 또는 MobaXterm `scp` 기능을 사용합니다.
 
 **전송해야 할 핵심 파일 2가지:**
 1. `work/ds_cnn.tflite` (91KB 모델 파일)
 2. `pc_mic_test.py` (우리가 PC에서 완성하고 최적화한 실시간 추론 스크립트)
 
-라즈베리파이의 적당한 폴더(예: `/home/pi/KWS/`)에 두 파일을 넣습니다.
+*(전송 시 `ds_cnn.tflite`는 라즈베리파이의 `~/KWS_Project/work/` 폴더 내에 위치하도록 경로를 맞춰주세요.)*
 
-### 🚀 실시간 추론 실행
-라즈베리파이 터미널에서 스크립트를 실행합니다.
+### 🚀 마이크 패스스루 옵션으로 추론 실행
+하드웨어 마이크 제어권(`/dev/snd`)을 Docker 안으로 넘겨주어 스크립트를 실행원합니다.
+
 ```bash
-# tflite 모델 경로가 스크립트 내 경로('./work/ds_cnn.tflite')와 맞는지 확인
-python3 pc_mic_test.py
+cd ~/KWS_Project
+
+# 오디오 권한을 컨테이너 밖의 하드웨어와 연동하여 실행
+docker run -it --rm \
+  --device /dev/snd \
+  -v $(pwd):/app \
+  kws-tf1.15
 ```
-> PC에서 경험했던 것과 똑같이, 1~2초의 초기화 후 "yes"와 "no"를 실시간으로 빠르게 포착해 낼 것입니다!
 
 ---
 
