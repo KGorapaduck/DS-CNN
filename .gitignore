@@ -1,5 +1,7 @@
 # Dataset (Large files)
 speech_dataset/
+for_dataset/recordings/
+rasp_test/*.wav
 *.tar.gz
 *.zip
 
