@@ -14,6 +14,11 @@ sudo poweroff: 시스템 전원을 안전하게 끕니다. (SD 카드 손상을 
 2. 파일 및 디렉토리 관리
 리눅스 터미널 환경에서 파일 시스템을 다루는 기본 명령어들입니다.
 
+## scp ds_cnn.tflite pi_virtual_mic_test.py kouy956@[IP주소]:/home/kouy956
+## scp kouy956@IP주소:/home/kouy956/test.wav .
+:파일 주고받기
+
+
 ls: 현재 디렉토리의 파일과 폴더 목록을 보여줍니다. (ls -al은 숨김 파일까지 상세히 표시합니다.)
 
 cd [경로]: 특정 디렉토리로 이동합니다. (예: cd /home/pi)

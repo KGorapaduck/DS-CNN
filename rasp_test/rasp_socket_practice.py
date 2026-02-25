@@ -1,7 +1,7 @@
 import socket
 import time
 
-SERVER_IP = '172.16.206.93' 
+SERVER_IP = '172.16.206.85' 
 PORT = 9999
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

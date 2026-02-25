@@ -17,10 +17,10 @@
 - [x] TFLite 모델 추론 테스트 (PC에서)
 
 ### 라즈베리파이 배포
-- [ ] 라즈베리파이 OS 세팅 (Lite 버전 권장)
+- [x] 라즈베리파이 OS 세팅 (Lite 버전 권장)
+- [x] 가상 마이크 스트리밍 테스트 스크립트 작성 (`pi_virtual_mic_test.py`)
 - [ ] USB 마이크 수음 환경 세팅 (pyaudio, 16kHz)
-- [ ] `tflite_runtime` 설치 및 `.tflite` 모델 배포
-- [ ] 실시간 KWS 추론 스크립트 작성 (마이크 → KWS → 판정)
+- [ ] `tflite_runtime` 설치 및 `.tflite` 모델 배포 (진행 중 - 파이썬 버전 충돌 및 용량 부족 이슈 해결 중)
 - [ ] 키워드 감지 시 TCP/UDP 소켓 통신 (`TRIGGER_ON`) 구현
 
 ---
