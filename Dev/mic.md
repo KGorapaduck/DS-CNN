@@ -84,7 +84,7 @@
 ```
 [라즈베리파이]
  1. USB 마이크로 상시 수음 (pyaudio, 16kHz)
- 2. 1초 오디오 프레임마다 KWS 추론 (tflite_runtime)
+ 2. 0.25초 오디오 프레임마다 KWS 슬라이딩 추론 (TensorFlow 1.15 + `.pb` 모델)
  3. 키워드 감지 시:
     ├─ PC로 TRIGGER_ON 신호 전송 (TCP 소켓)
     └─ 이후 N초간 오디오 버퍼를 PC로 스트리밍

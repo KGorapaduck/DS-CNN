@@ -62,6 +62,19 @@ RUN pip install /tmp/tensorflow-1.15.2-cp37-cp37m-linux_armv7l.whl --extra-index
 # 핵심 연산 라이브러리들 또한 원클릭 설치를 위해 piwheels 배급사 이용
 RUN pip install numpy scipy wave --extra-index-url https://www.piwheels.org/simple/
 
+# 🌟 중요 (protobuf 에러 강제 회피): TF 1.15는 protobuf 4.x와 충돌하므로 반드시 3.20.0으로 낮춰야 함
+RUN pip install protobuf==3.20.0
+
 CMD ["bash"]
 ```
 *(위 도커파일 기반으로 라즈베리파이 3 B+에서 빌드했을 때 약 45~50분 소요 끝에 정상 `FINISHED` 확인 완료.)*
+
+---
+
+## 5. 실패 4: Protobuf Descriptor TypeError 충돌
+**상황:**
+- Docker 빌드 완료 후 파이썬 스크립트 실행 시 `TypeError: Descriptors cannot not be created directly.` 에러 발생 및 스크립트 강제 종료.
+**원인:**
+- TensorFlow 1.15 내부의 Graph 정의 로직이 최신 버전(4.x 이상)의 `protobuf` 패키지 생성자 방식과 아예 호환되지 않아서 파이썬 레벨에서 크래시 발생 (2022년 5월 Python 런타임 변경 사항 반영).
+**해결 대안:**
+- 도커 컨테이너 내부 터미널에서 `pip install protobuf==3.20.0` 명령어로 강제 다운그레이드를 수행하거나, `Dockerfile` 빌드 단계에 해당 줄을 추가하여 영구적으로 버전을 고정함.

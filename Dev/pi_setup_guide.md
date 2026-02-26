@@ -87,13 +87,13 @@ docker build -t kws-tf1.15 .
 
 ## 4단계: 파일 전송 및 Docker 컨테이너 실행
 
-PC에서 완성된 KWS 파일들을 라즈베리파이의 `~/KWS_Project` 폴더로 전송합니다. 전송 수단으로는 FileZilla, WinSCP, 또는 MobaXterm `scp` 기능을 사용합니다.
+PC에서 완성된 KWS 파일들을 라즈베리파이의 `~/KWS_Project` 폴더로 전송합니다. 전송 수단으로는 터미널의 `scp` 기능을 사용합니다.
 
 **전송해야 할 핵심 파일 2가지:**
-1. `work/ds_cnn.tflite` (91KB 모델 파일)
-2. `pc_mic_test.py` (우리가 PC에서 완성하고 최적화한 실시간 추론 스크립트)
+1. `work/ds_cnn_korean_frozen.pb` (동결된 배포용 모델 원본)
+2. `docker_virtual_mic_korean.py` (우리가 PC에서 완성하고 한국어에 맞게 최적화한 실시간 추론 스크립트)
 
-*(전송 시 `ds_cnn.tflite`는 라즈베리파이의 `~/KWS_Project/work/` 폴더 내에 위치하도록 경로를 맞춰주세요.)*
+*(전송 시 `.pb` 모델의 경로가 스크립트 내부 설정과 일치하도록 주의하세요. 기본 스크립트는 모델이 같은 폴더나 하위 폴더에 있는 것을 자동으로 스캔합니다.)*
 
 ### 🚀 마이크 패스스루 옵션으로 추론 실행
 하드웨어 마이크 제어권(`/dev/snd`)을 Docker 안으로 넘겨주어 스크립트를 실행원합니다.
@@ -102,10 +102,10 @@ PC에서 완성된 KWS 파일들을 라즈베리파이의 `~/KWS_Project` 폴더
 cd ~/KWS_Project
 
 # 오디오 권한을 컨테이너 밖의 하드웨어와 연동하여 실행
-docker run -it --rm \
-  --device /dev/snd \
-  -v $(pwd):/app \
-  kws-tf1.15
+docker run -it --rm --device /dev/snd -v $(pwd):/app -w /app kws-tf1.15 bash
+
+# 내부 터미널 진입 후 스크립트 실행
+python docker_virtual_mic_korean.py
 ```
 
 ---

@@ -66,6 +66,6 @@ docker run -it --rm -v $(pwd):/app -w /app --device /dev/snd my-tf1.15-32bit bas
 내부 프롬프트 장소가 `root@컨테이너ID:/app#` 으로 바뀌었다면, 스크립트를 즉시 실행하여 짜릿한 KWS 100% 인식률을 눈으로 확인합니다!
 
 ```bash
-# 가상 WAV 파일 테스트 시
-python docker_virtual_mic.py
+# 가상 WAV 파일 테스트 시 (한국어 모델)
+python docker_virtual_mic_korean.py
 ```
